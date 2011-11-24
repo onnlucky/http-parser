@@ -1442,10 +1442,15 @@ test_message (const struct message *message)
         goto test;
       }
 
+#if defined(HTTP_PARSER_USE_RESTART)
+      msg2len = raw_len - read;
+      msg2 = msg1 + read;
+#else
       if (read != msg1len) {
         print_error(msg1, read);
         exit(1);
       }
+#endif
     }
 
 
@@ -1669,6 +1674,10 @@ test:
 void
 test_scan (const struct message *r1, const struct message *r2, const struct message *r3)
 {
+#if defined(HTTP_PARSER_USE_RESTART)
+    // not supported, the restarting parser assumes a single growing buffer
+    return;
+#endif
   char total[80*1024] = "\0";
   char buf1[80*1024] = "\0";
   char buf2[80*1024] = "\0";

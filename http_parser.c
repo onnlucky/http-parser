@@ -55,11 +55,21 @@ do {                                                                 \
   }                                                                  \
 } while (0)
 
-
+#if defined(HTTP_PARSER_USE_RESTART)
+#define MARK(FOR)                                                    \
+do {                                                                 \
+  FOR##_mark = p;                                                    \
+  parser->state = state;                                             \
+  parser->header_state = header_state;                               \
+  parser->index = index;                                             \
+  parser->nread = nread;                                             \
+} while (0)
+#else
 #define MARK(FOR)                                                    \
 do {                                                                 \
   FOR##_mark = p;                                                    \
 } while (0)
+#endif
 
 #define CALLBACK(FOR)                                                \
 do {                                                                 \
@@ -1706,9 +1716,15 @@ size_t http_parser_execute (http_parser *parser,
     }
   }
 
+#if defined(HTTP_PARSER_USE_RESTART)
+  if (url_mark) return (url_mark - data);
+  if (header_field_mark) return (header_field_mark - data);
+  if (header_value_mark) return (header_value_mark - data);
+#else
   CALLBACK(header_field);
   CALLBACK(header_value);
   CALLBACK(url);
+#endif
 
   parser->state = state;
   parser->header_state = header_state;
